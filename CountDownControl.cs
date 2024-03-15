@@ -32,11 +32,15 @@ namespace eventCountDown
         }
 
         private Timer timer;
-        private int remainingSeconds;
+        private int remainingSeconds;            
+
+        // 做一个模拟的完成的事件数量
+        int completedEvents = new Random().Next(1, 10);
+
         public CountDownControl()
         {
             InitializeComponent();
-            
+
             // UI
             this.VisibleChanged += new EventHandler(CountDownControl_VisibleChanged);
             // 在这里为 eventLabel 添加改变大小的事件处理器——貌似无法直接改变左右边界，是固定的
@@ -55,13 +59,17 @@ namespace eventCountDown
 
             completedEventsLabel.TextAlign = ContentAlignment.MiddleCenter;
             completedEventsLabel.Dock = DockStyle.Fill;
-            completedEventsLabel.Visible = false;
+            completedEventsLabel.Visible = true;
+            completedEventsLabel.Text = "Completed events: " + completedEvents;
             completedEventsLabel.Font = new System.Drawing.Font("苹方-简", 11F);
             completedEventsLabel.ForeColor = Color.White;
             this.Controls.Add(completedEventsLabel);
+
+            ToggleCountdownShownStatus(false);
+
         }
 
-        // Hot Key
+        #region Hot Key
         private void CountDownControl_VisibleChanged(object sender, EventArgs e)
         {
             if (!this.Visible)
@@ -96,6 +104,7 @@ namespace eventCountDown
                                 ToggleCountdownShownStatus(true);
                                 this.countDownLabel.Text = popupWindow.TimeInMinutes.ToString() + ":00";
                                 this.eventLabel.Text = popupWindow.EventName;
+                                completedEventsLabel.Visible = false;
                                 this.StartCountdown(popupWindow.TimeInMinutes);
                             }
 
@@ -105,8 +114,9 @@ namespace eventCountDown
             }
             base.WndProc(ref m);
         }
+        #endregion
 
-        // UI
+        #region UI
         private void EventLabel_SizeChanged(object sender, EventArgs e)
         {
             if (sender is Label eventLabel)
@@ -130,28 +140,34 @@ namespace eventCountDown
                 e.Graphics.DrawLine(pen, new Point(BORDER_WIDTH / 2, gap), new Point(BORDER_WIDTH / 2, this.Height - gap)); // 从左上角到左下角绘制边框
             }
         }
+        #endregion
 
-        // Timer
+        #region Timer
         public void StartCountdown(int minutes)
         {
             this.remainingSeconds = minutes * 60; // 把分钟转换为秒数
             this.timer.Start(); // 启动计时器
         }
 
+        private void HandleEventDone()
+        {
+            this.timer.Stop(); // 如果倒计时结束，停止计时器
+
+            ToggleCountdownShownStatus(false);
+
+            // 显示完成的事件数量
+            this.completedEventsLabel.Visible = true;
+            this.completedEventsLabel.Text = "Completed events: " + completedEvents;
+
+            // this.Invalidate(); // 强制立即重绘控件
+            System.Media.SystemSounds.Beep.Play(); // 还有很多种提示音，可以去看 System.Media.SystemSounds的文档。不过还是有空的话自定义个提示音吧
+
+        }
         private void Timer_Tick(object sender, EventArgs e)
         {
             if (this.remainingSeconds <= 0)
             {
-                this.timer.Stop(); // 如果倒计时结束，停止计时器
-
-                ToggleCountdownShownStatus(false);
-                // 做一个模拟的完成的事件数量
-                int completedEvents = new Random().Next(1, 10);
-
-                // 显示完成的事件数量
-                this.completedEventsLabel.Visible = true;
-                this.completedEventsLabel.Text = "Completed events: " + completedEvents;
-                // this.Invalidate(); // 强制立即重绘控件
+                HandleEventDone();
             }
             else
             {
@@ -165,12 +181,13 @@ namespace eventCountDown
                 this.countDownLabel.Text = string.Format("{0:D2}:{1:D2}", minutes, seconds);
             }
         }
-        
+
         private void ToggleCountdownShownStatus(bool status)
         {
             this.countDownLabel.Visible = status;
             this.eventLabel.Visible = status;
             this.tableLayoutPanel1.Visible = status;
         }
+        #endregion
     }
 }

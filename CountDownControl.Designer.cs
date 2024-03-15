@@ -45,7 +45,7 @@ namespace eventCountDown
             this.countDownLabel.Location = new System.Drawing.Point(153, 0);
             this.countDownLabel.Margin = new System.Windows.Forms.Padding(0);
             this.countDownLabel.Name = "countDownLabel";
-            this.countDownLabel.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.countDownLabel.Padding = new System.Windows.Forms.Padding(5);
             this.countDownLabel.Size = new System.Drawing.Size(103, 41);
             this.countDownLabel.TabIndex = 1;
             this.countDownLabel.Text = "10:00";
@@ -89,7 +89,7 @@ namespace eventCountDown
             this.BackColor = System.Drawing.Color.Black;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "CountDownControl";
-            this.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Padding = new System.Windows.Forms.Padding(2);
             this.Size = new System.Drawing.Size(260, 45);
             this.Load += new System.EventHandler(this.CountDownControl_Load);
             this.tableLayoutPanel1.ResumeLayout(false);
