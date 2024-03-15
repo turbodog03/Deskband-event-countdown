@@ -1,0 +1,41 @@
+﻿<Window x:Class="eventCountDown.PopupWindowWPF"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PopupWindow" Height="180" Width="600" WindowStartupLocation="CenterScreen" Topmost="True" 
+        FocusManager.FocusedElement="{Binding ElementName=inputTextBox}"
+        WindowStyle="None" Background="Transparent" AllowsTransparency="True">
+    <TextBox Height="50" x:Name="inputTextBox" Grid.Row="1" KeyDown="InputTextBox_KeyDown" FontFamily="苹方-简" 
+             FontSize="16" VerticalAlignment="Center" VerticalContentAlignment="Center">
+        <TextBox.Template>
+            <ControlTemplate TargetType="{x:Type TextBox}">
+                <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="Gray" 
+                            BorderThickness="1" 
+                            CornerRadius="10" 
+                            Padding="10">
+                    <Grid>
+                        <TextBlock Text="请按照格式'事件名 计时分钟数'输入（例如：'看完一个视频 15'）" 
+                                       Foreground="Gray" 
+                                       Visibility="Collapsed" 
+                                       x:Name="placeholder" 
+                                       Margin="5"
+                                   VerticalAlignment="Center"/>
+                        <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="Text" Value="">
+                        <Setter TargetName="placeholder" Property="Visibility" Value="Visible"/>
+                    </Trigger>
+                    <Trigger Property="IsFocused" Value="True">
+                        <Setter Property="Effect">
+                            <Setter.Value>
+                                <DropShadowEffect Color="Black" BlurRadius="10" Direction="-90" Opacity="0.3" ShadowDepth="3" />
+                            </Setter.Value>
+                        </Setter>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </TextBox.Template>
+    </TextBox>
+</Window>

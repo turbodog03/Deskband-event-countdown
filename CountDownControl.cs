@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace eventCountDown
@@ -98,8 +92,13 @@ namespace eventCountDown
                     switch (m.WParam.ToInt32())
                     {
                         case 100:    //按下的是Ctrl+Shift+D
-                            var popupWindow = new PopupWindow();
-                            if (popupWindow.ShowDialog() == DialogResult.OK)
+                            //var popupWindow = new PopupWindow();
+
+                            var popupWindow = new PopupWindowWPF();
+                            // if (popupWindow.ShowDialog() == DialogResult.OK)
+
+                            // DialogResult in WPF is bool, unlike winform (OK/Cancel...)
+                            if ((bool)popupWindow.ShowDialog())
                             {
                                 ToggleCountdownShownStatus(true);
                                 this.countDownLabel.Text = popupWindow.TimeInMinutes.ToString() + ":00";
@@ -117,6 +116,7 @@ namespace eventCountDown
         #endregion
 
         #region UI
+        // 貌似无法实时调整大小，暂时放弃
         private void EventLabel_SizeChanged(object sender, EventArgs e)
         {
             if (sender is Label eventLabel)
@@ -161,6 +161,7 @@ namespace eventCountDown
 
             // this.Invalidate(); // 强制立即重绘控件
             System.Media.SystemSounds.Beep.Play(); // 还有很多种提示音，可以去看 System.Media.SystemSounds的文档。不过还是有空的话自定义个提示音吧
+            // https://learn.microsoft.com/en-us/dotnet/api/system.media.systemsounds?view=dotnet-plat-ext-8.0
 
         }
         private void Timer_Tick(object sender, EventArgs e)
