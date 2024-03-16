@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
+using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -26,42 +28,68 @@ namespace eventCountDown
         }
 
         private Timer timer;
-        private int remainingSeconds;            
+        private int remainingSeconds;
 
-        // 做一个模拟的完成的事件数量
-        int completedEvents = new Random().Next(1, 10);
+        private string CurrentEvent = "";
+        private DateTime StartTime = DateTime.Now;
+        readonly LogHelper LogHelper = new LogHelper(path);
+        readonly DBHelper dbHelper = new DBHelper(Path.Combine(path, "SQLiteDB.db"));
+        static readonly string path = Global.AppPath;
 
+        DateTime nowDate = DateTime.Now;
         public CountDownControl()
         {
             InitializeComponent();
-
-            // UI
-            this.VisibleChanged += new EventHandler(CountDownControl_VisibleChanged);
-            // 在这里为 eventLabel 添加改变大小的事件处理器——貌似无法直接改变左右边界，是固定的
-            // this.eventLabel.SizeChanged += EventLabel_SizeChanged;
-            int taskBarHeight = Screen.PrimaryScreen.Bounds.Height - Screen.PrimaryScreen.WorkingArea.Height;
-            this.Height = taskBarHeight;
-
-            this.Paint += LeftBorderPaint;
-
-            // Timer
-            this.timer = new Timer
-            {
-                Interval = 1000 // 设置为每一秒触发一次 Tick 事件
-            };
-            this.timer.Tick += new EventHandler(this.Timer_Tick); // 添加 Tick 事件的处理器
-
-            completedEventsLabel.TextAlign = ContentAlignment.MiddleCenter;
-            completedEventsLabel.Dock = DockStyle.Fill;
-            completedEventsLabel.Visible = true;
-            completedEventsLabel.Text = "Completed events: " + completedEvents;
-            completedEventsLabel.Font = new System.Drawing.Font("苹方-简", 11F);
-            completedEventsLabel.ForeColor = Color.White;
-            this.Controls.Add(completedEventsLabel);
-
-            ToggleCountdownShownStatus(false);
-
+            Initialize();
         }
+
+        private void Initialize()
+        {
+            try
+            {
+                LogHelper.LogInfo("Getting EventNum");
+                int completedEvents = 0;
+                try
+                {
+                    completedEvents = dbHelper.GetEventNumOfADay(nowDate);
+                }
+                catch (Exception e)
+                {
+                    LogHelper.LogInfo($"Failed to get eventNum of a Day , e:{e}");
+                }
+                LogHelper.LogInfo($"Event num: {completedEvents}");
+
+                // UI
+                this.VisibleChanged += new EventHandler(CountDownControl_VisibleChanged);
+                // 在这里为 eventLabel 添加改变大小的事件处理器——貌似无法直接改变左右边界，是固定的
+                int taskBarHeight = Screen.PrimaryScreen.Bounds.Height - Screen.PrimaryScreen.WorkingArea.Height;
+                this.Height = taskBarHeight;
+                this.Paint += LeftBorderPaint;
+                // Timer
+                this.timer = new Timer
+                {
+                    Interval = 1000 // 设置为每一秒触发一次 Tick 事件
+                };
+                this.timer.Tick += new EventHandler(this.Timer_Tick);
+                completedEventsLabel.TextAlign = ContentAlignment.MiddleCenter;
+                completedEventsLabel.Dock = DockStyle.Fill;
+                completedEventsLabel.Visible = true;
+                completedEventsLabel.Text = "Completed events: " + completedEvents;
+                completedEventsLabel.ForeColor = Color.White;
+                // TODO：using custom font, add font existance detect
+                completedEventsLabel.Font = new Font("苹方-简", 11F);
+                this.Controls.Add(completedEventsLabel);
+
+                ToggleCountdownShownStatus(false);
+
+                LogHelper.LogInfo("Init finished");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError(ex);
+            }
+        }
+
 
         #region Hot Key
         private void CountDownControl_VisibleChanged(object sender, EventArgs e)
@@ -95,18 +123,15 @@ namespace eventCountDown
                             //var popupWindow = new PopupWindow();
 
                             var popupWindow = new PopupWindowWPF();
+                            popupWindow.Activate();
                             // if (popupWindow.ShowDialog() == DialogResult.OK)
 
                             // DialogResult in WPF is bool, unlike winform (OK/Cancel...)
                             if ((bool)popupWindow.ShowDialog())
                             {
                                 ToggleCountdownShownStatus(true);
-                                this.countDownLabel.Text = popupWindow.TimeInMinutes.ToString() + ":00";
-                                this.eventLabel.Text = popupWindow.EventName;
-                                completedEventsLabel.Visible = false;
-                                this.StartCountdown(popupWindow.TimeInMinutes);
+                                HandleEventStart(popupWindow);
                             }
-
                             break;
                     }
                     break;
@@ -115,7 +140,72 @@ namespace eventCountDown
         }
         #endregion
 
+        #region event
+        private void HandleEventStart(PopupWindowWPF popupWindow)
+        {
+            DateTime nowTime = DateTime.Now;
+            // a current event is running
+            if (this.timer.Enabled || this.remainingSeconds > 0)
+            {
+                TimeSpan interval = nowTime.Subtract(StartTime);
+                int MIN_COUNT_MIN = 1;
+                // current event is running for at least 1 min, record it
+                if (interval.TotalMinutes > MIN_COUNT_MIN)
+                {
+                    // write current event to database
+                    dbHelper.AddOneRecordToDB(CurrentEvent, StartTime, nowTime);
+                }
+            }
+            CurrentEvent = popupWindow.EventName;
+            StartTime = nowTime;
+
+            this.countDownLabel.Text = popupWindow.TimeInMinutes.ToString() + ":00";
+            this.eventLabel.Text = CurrentEvent;
+            completedEventsLabel.Visible = false;
+            StartCountdown(popupWindow.TimeInMinutes);
+        }
+
+
+        private void HandleEventDone()
+        {
+            this.timer.Stop(); // stop timer when count down is done
+
+            ToggleCountdownShownStatus(false);
+            dbHelper.AddOneRecordToDB(CurrentEvent, StartTime, DateTime.Now);
+
+            int completedEvents = dbHelper.GetEventNumOfADay(nowDate);
+            // 显示完成的事件数量
+            this.completedEventsLabel.Visible = true;
+            this.completedEventsLabel.Text = "Completed events: " + completedEvents;
+            LogHelper.LogInfo($"{CurrentEvent} Finished");
+            // this.Invalidate(); // 强制立即重绘控件
+            PlaySound();
+        }
+        
+        private void PlaySound()
+        {
+            string SoundPath = Path.Combine(path, "Sound.wav");
+            // custom sound exist
+            if (File.Exists(SoundPath))
+            {
+                SoundPlayer player = new SoundPlayer();
+                player.SoundLocation = SoundPath;
+                player.Play();
+                LogHelper.LogInfo("Play Sound.wav ");
+            }
+            // play default
+            else
+            {
+                SystemSounds.Beep.Play(); // 还有很多种提示音，可以去看 System.Media.SystemSounds的文档。不过还是有空的话自定义个提示音吧
+                // https://learn.microsoft.com/en-us/dotnet/api/system.media.systemsounds?view=dotnet-plat-ext-8.0
+                LogHelper.LogInfo("Play SystemSound");
+            }
+
+        }
+        #endregion
+
         #region UI
+
         // 貌似无法实时调整大小，暂时放弃
         private void EventLabel_SizeChanged(object sender, EventArgs e)
         {
@@ -149,21 +239,6 @@ namespace eventCountDown
             this.timer.Start(); // 启动计时器
         }
 
-        private void HandleEventDone()
-        {
-            this.timer.Stop(); // 如果倒计时结束，停止计时器
-
-            ToggleCountdownShownStatus(false);
-
-            // 显示完成的事件数量
-            this.completedEventsLabel.Visible = true;
-            this.completedEventsLabel.Text = "Completed events: " + completedEvents;
-
-            // this.Invalidate(); // 强制立即重绘控件
-            System.Media.SystemSounds.Beep.Play(); // 还有很多种提示音，可以去看 System.Media.SystemSounds的文档。不过还是有空的话自定义个提示音吧
-            // https://learn.microsoft.com/en-us/dotnet/api/system.media.systemsounds?view=dotnet-plat-ext-8.0
-
-        }
         private void Timer_Tick(object sender, EventArgs e)
         {
             if (this.remainingSeconds <= 0)
