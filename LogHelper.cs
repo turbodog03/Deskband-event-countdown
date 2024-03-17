@@ -36,7 +36,7 @@ namespace eventCountDown
         {
             if (Global.LOG_LEVELS.INFO >= Global.LOG_LEVEL)
             {
-                string message = $"INFO：{content}";
+                string message = $"[INFO]：{content}";
                 LogText(message);
             }
         }
@@ -45,7 +45,7 @@ namespace eventCountDown
         {
             if (Global.LOG_LEVELS.ERROR >= Global.LOG_LEVEL)
             {
-                string message = $"ERROR：Exception caught : {ex}";
+                string message = $"[ERROR]：Exception caught : {ex}";
                 LogText(message);
             }
         }
@@ -55,7 +55,7 @@ namespace eventCountDown
         {
             if (Global.LOG_LEVELS.ERROR >= Global.LOG_LEVEL)
             {
-                string message = $"ERROR: {error}";
+                string message = $"[ERROR]: {error}";
                 LogText(message);
             }
         }
