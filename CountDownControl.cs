@@ -247,9 +247,12 @@ namespace eventCountDown
                 float fontSize = lbl.Font.Size;
                 Font tempFont = lbl.Font;
 
+                // set padding, avoid overflow
+                float targetWidth = lbl.Width * 0.9f;  // add padding - 90% of original width
+                float targetHeight = lbl.Height * 0.9f;  // add padding - 90% of original height
                 // 获取利用特定的字体来绘制串时所需的宽度和高度，以实现动态绘图
                 textSize = g.MeasureString(lbl.Text, tempFont);
-                while (textSize.Width > lbl.Width || textSize.Height > lbl.Height)
+                while (textSize.Width > targetWidth || textSize.Height > targetHeight)
                 {
                     fontSize -= 0.5f;
                     LogHelper.LogInfo($"fontsize --, now fontsize : {fontSize}");
