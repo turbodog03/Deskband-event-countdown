@@ -4,6 +4,7 @@ using System.IO;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace eventCountDown
 {
@@ -123,7 +124,10 @@ namespace eventCountDown
                             //var popupWindow = new PopupWindow();
 
                             var popupWindow = new PopupWindowWPF();
-                            popupWindow.Activate();
+                            // 具有键盘焦点的元素也具有逻辑焦点，但具有逻辑焦点的元素不一定具有键盘焦点。只设置键盘焦点即可
+                            // https://learn.microsoft.com/zh-cn/dotnet/desktop/wpf/advanced/focus-overview?view=netframeworkdesktop-4.8
+                            Keyboard.Focus(popupWindow);
+                            
                             // if (popupWindow.ShowDialog() == DialogResult.OK)
 
                             // DialogResult in WPF is bool, unlike winform (OK/Cancel...)
