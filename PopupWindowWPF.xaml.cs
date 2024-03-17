@@ -10,7 +10,7 @@ namespace eventCountDown
 
         public string LastEvent;
 
-        LogHelper LogHelper = new LogHelper(Global.APP_PATH);
+        LogHelper LogHelper = new LogHelper(Global.APP_PATH, Global.GLOBAL_LOG_FILE_NAME, "PopupWindow");
 
         public PopupWindowWPF(string LastEvent)
         {

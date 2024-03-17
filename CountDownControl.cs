@@ -33,9 +33,9 @@ namespace eventCountDown
 
         private string CurrentEvent = "";
         private DateTime StartTime = DateTime.Now;
-        readonly LogHelper LogHelper = new LogHelper(path);
-        readonly DBHelper dbHelper = new DBHelper(Path.Combine(path, "SQLiteDB.db"));
-        static readonly string path = Global.APP_PATH;
+
+        readonly LogHelper LogHelper = new LogHelper(Global.APP_PATH, Global.GLOBAL_LOG_FILE_NAME, "CountDownControl");
+        readonly DBHelper dbHelper = new DBHelper(Path.Combine(Global.APP_PATH, "SQLiteDB.db"));
 
         DateTime nowDate = DateTime.Now;
         public CountDownControl()
@@ -75,7 +75,7 @@ namespace eventCountDown
                 completedEventsLabel.TextAlign = ContentAlignment.MiddleCenter;
                 completedEventsLabel.Dock = DockStyle.Fill;
                 completedEventsLabel.Visible = true;
-                completedEventsLabel.Text = "Completed events: " + completedEvents;
+                completedEventsLabel.Text = $"Completed events: {completedEvents}";
                 completedEventsLabel.ForeColor = Color.White;
                 // TODO：using custom font, add font existance detect
                 completedEventsLabel.Font = new Font(Global.COMPELETED_LABEL_FONT, Global.COMPELETED_LABEL_FONT_SIZE);
@@ -191,14 +191,14 @@ namespace eventCountDown
 
         private void PlaySound()
         {
-            string SoundPath = Path.Combine(path, "Sound.wav");
+            string SoundPath = Path.Combine(Global.APP_PATH, Global.SOUND_FILE_NAME);
             // custom sound exist
             if (File.Exists(SoundPath))
             {
                 SoundPlayer player = new SoundPlayer();
                 player.SoundLocation = SoundPath;
                 player.Play();
-                LogHelper.LogInfo("Play Sound.wav ");
+                LogHelper.LogInfo("Play custom sound ");
             }
             // play default
             else
@@ -240,7 +240,7 @@ namespace eventCountDown
 
         private void AdjustFontSize(Label lbl)
         {
-            LogHelper.LogInfo("Start adjust fontsize");
+            LogHelper.LogInfo("Start adjusting fontsize");
             using (Graphics g = lbl.CreateGraphics())
             {
                 SizeF textSize;
@@ -259,7 +259,7 @@ namespace eventCountDown
 
                 lbl.Font = new Font(lbl.Font.FontFamily, fontSize);
             }
-            LogHelper.LogInfo("Finish adjust fontsize");
+            LogHelper.LogInfo("Finish adjusting fontsize");
         }
 
         private void ResetFontSize(Label lbl)
