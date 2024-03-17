@@ -8,16 +8,22 @@ namespace eventCountDown
         public string EventName { get; private set; }
         public int TimeInMinutes { get; private set; }
 
-        public PopupWindowWPF()
+        public string LastEvent;
+
+        LogHelper LogHelper = new LogHelper(Global.APP_PATH);
+
+        public PopupWindowWPF(string LastEvent)
         {
+            this.LastEvent = LastEvent;
             InitializeComponent();
         }
 
-        void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
-                var inputParts = inputTextBox.Text.Split(new[] { ' ' }, 2);
+                LogHelper.LogInfo("popupWindow: enter pressed");
+                string[] inputParts = inputTextBox.Text.Split(new[] { ' ' }, 2);
                 if (inputParts.Length == 2 && int.TryParse(inputParts[1], out int time))
                 {
                     EventName = inputParts[0];
@@ -35,6 +41,18 @@ namespace eventCountDown
             {
                 DialogResult = false;
                 Close();
+            }
+        }
+
+        // arrow key may be consumed by default controls, like move in the textbox. using previewKeyDown to capture it, which happens before KeyDown
+        private void InputTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // in WPF, arrow key, f key, alt, ctrl, shift key are system keys
+            if (e.Key == Key.Up)
+            {
+                inputTextBox.Text = this.LastEvent + " ";
+                inputTextBox.CaretIndex = inputTextBox.Text.Length;  // Place the cursor at the end of the text
+                LogHelper.LogInfo($"popupWindow: up arrow pressed, lastEvent is {LastEvent}");
             }
         }
 

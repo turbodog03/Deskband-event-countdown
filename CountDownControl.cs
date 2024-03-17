@@ -123,7 +123,7 @@ namespace eventCountDown
                         case 100:    //按下的是Ctrl+Shift+D
                             //var popupWindow = new PopupWindow();
 
-                            var popupWindow = new PopupWindowWPF();
+                            var popupWindow = new PopupWindowWPF(this.CurrentEvent);
                             // 具有键盘焦点的元素也具有逻辑焦点，但具有逻辑焦点的元素不一定具有键盘焦点。只设置键盘焦点即可
                             // https://learn.microsoft.com/zh-cn/dotnet/desktop/wpf/advanced/focus-overview?view=netframeworkdesktop-4.8
                             Keyboard.Focus(popupWindow);
