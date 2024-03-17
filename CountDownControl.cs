@@ -34,7 +34,7 @@ namespace eventCountDown
         private DateTime StartTime = DateTime.Now;
         readonly LogHelper LogHelper = new LogHelper(path);
         readonly DBHelper dbHelper = new DBHelper(Path.Combine(path, "SQLiteDB.db"));
-        static readonly string path = Global.AppPath;
+        static readonly string path = Global.APP_PATH;
 
         DateTime nowDate = DateTime.Now;
         public CountDownControl()
@@ -77,7 +77,7 @@ namespace eventCountDown
                 completedEventsLabel.Text = "Completed events: " + completedEvents;
                 completedEventsLabel.ForeColor = Color.White;
                 // TODO：using custom font, add font existance detect
-                completedEventsLabel.Font = new Font("苹方-简", 11F);
+                completedEventsLabel.Font = new Font(Global.COMPELETED_LABEL_FONT, Global.COMPELETED_LABEL_FONT_SIZE);
                 this.Controls.Add(completedEventsLabel);
 
                 ToggleCountdownShownStatus(false);
@@ -148,9 +148,8 @@ namespace eventCountDown
             if (this.timer.Enabled || this.remainingSeconds > 0)
             {
                 TimeSpan interval = nowTime.Subtract(StartTime);
-                int MIN_COUNT_MIN = 1;
-                // current event is running for at least 1 min, record it
-                if (interval.TotalMinutes > MIN_COUNT_MIN)
+                // current event is running for at least Min_COUNT_MIN min, record it
+                if (interval.TotalMinutes > Global.MIN_COUNT_MIN)
                 {
                     // write current event to database
                     dbHelper.AddOneRecordToDB(CurrentEvent, StartTime, nowTime);
@@ -159,8 +158,12 @@ namespace eventCountDown
             CurrentEvent = popupWindow.EventName;
             StartTime = nowTime;
 
+            // in case of last event isn't finish, and reset isn't called, so call it here
+            ResetFontSize(this.eventLabel);
             this.countDownLabel.Text = popupWindow.TimeInMinutes.ToString() + ":00";
             this.eventLabel.Text = CurrentEvent;
+            AdjustFontSize(this.eventLabel);
+
             completedEventsLabel.Visible = false;
             StartCountdown(popupWindow.TimeInMinutes);
         }
@@ -181,7 +184,7 @@ namespace eventCountDown
             // this.Invalidate(); // 强制立即重绘控件
             PlaySound();
         }
-        
+
         private void PlaySound()
         {
             string SoundPath = Path.Combine(path, "Sound.wav");
@@ -230,6 +233,37 @@ namespace eventCountDown
                 e.Graphics.DrawLine(pen, new Point(BORDER_WIDTH / 2, gap), new Point(BORDER_WIDTH / 2, this.Height - gap)); // 从左上角到左下角绘制边框
             }
         }
+
+        private void AdjustFontSize(Label lbl)
+        {
+            LogHelper.LogInfo("Start adjust fontsize");
+            using (Graphics g = lbl.CreateGraphics())
+            {
+                SizeF textSize;
+                float fontSize = lbl.Font.Size;
+                Font tempFont = lbl.Font;
+
+                // 获取利用特定的字体来绘制串时所需的宽度和高度，以实现动态绘图
+                textSize = g.MeasureString(lbl.Text, tempFont);
+                while (textSize.Width > lbl.Width || textSize.Height > lbl.Height)
+                {
+                    fontSize -= 0.5f;
+                    LogHelper.LogInfo($"fontsize --, now fontsize : {fontSize}");
+                    tempFont = new Font(lbl.Font.FontFamily, fontSize);
+                    textSize = g.MeasureString(lbl.Text, tempFont);
+                }
+
+                lbl.Font = new Font(lbl.Font.FontFamily, fontSize);
+            }
+            LogHelper.LogInfo("Finish adjust fontsize");
+        }
+
+        private void ResetFontSize(Label lbl)
+        {
+            LogHelper.LogInfo("fontSize reset");
+            lbl.Font = new Font(lbl.Font.FontFamily, Global.EVENT_LABEL_FONT_SIZE, lbl.Font.Style);
+        }
+
         #endregion
 
         #region Timer
