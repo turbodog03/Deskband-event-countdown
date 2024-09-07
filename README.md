@@ -87,6 +87,12 @@ commit `99e26e` 是不带数据库的最简洁版本
 - 改进写死的值，用屏幕尺寸的比例去做优化 - gitignore ✅
 - 按↑快速获取上一个event——适用于时间估计过短，需要延续的情况 ✅
 
+### 更换显示方案
+！important
+  - 由于win11完全不再支持deskband，甚至连工具栏选项都消失了，现有的显示方法难以为继……目前使用了[ExplorerPatcher](https://github.com/valinet/ExplorerPatcher)顶着，先回到win10任务栏。
+  - 可能需要参考TrafficMonitor(https://github.com/zhongyang219/TrafficMonitor)的实现，它在win11也能正常显示，无需特殊处理
+  - 或者把显示事件的窗口作为任务栏窗口的子窗口然后把zIndex设高……？
+
 ### bugFix
 - 有时无法正确获得焦点 ✅
 

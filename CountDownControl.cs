@@ -42,6 +42,13 @@ namespace eventCountDown
         {
             InitializeComponent();
             Initialize();
+            this.ContextMenu = new ContextMenu(new MenuItem[]
+            {
+                new MenuItem("about", (s,e) =>
+                {
+                    MessageBox.Show("test");
+                })
+            });
         }
 
         private void Initialize()
